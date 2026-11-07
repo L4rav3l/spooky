@@ -26,10 +26,17 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+        _sceneManager.AddScene(new Menu(GraphicsDevice, Content, _sceneManager), "Menu");
+        _sceneManager.ChangeScene("Menu");
     }
 
     protected override void Update(GameTime gameTime)
     {
+        if(GameData.Quit)
+        {
+            Exit();
+        }
+
         _sceneManager.GetCurrentScene().Update(gameTime);
 
         base.Update(gameTime);
@@ -39,9 +46,11 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.Gray);
 
-        _spriteBatch.Begin(sortMode: SpriteSortMode.FrontToBack, blendState.AlphaBlend, samplerState:samplerState.PointClamp);
+        _spriteBatch.Begin(sortMode: SpriteSortMode.FrontToBack, blendState: BlendState.AlphaBlend, samplerState:SamplerState.PointClamp);
 
         _sceneManager.GetCurrentScene().Draw(_spriteBatch);
+
+        _spriteBatch.End();
 
         base.Draw(gameTime);
     }

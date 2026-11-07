@@ -13,3 +13,14 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin pixelfont.spritefont
+/importer:FontDescriptionImporter
+/processor:LocalizedFontProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/processorParam:Version=3.8.6.1
+/build:pixelfont.spritefont
+
+#begin PixelifySans-Regular.ttf
+/copy:PixelifySans-Regular.ttf
+

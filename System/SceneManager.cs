@@ -9,17 +9,17 @@ public class SceneManager
 
     public SceneManager()
     {
-        scene = new();
+        scenes = new();
     }
 
-    public AddScene(string name, IScene scene)
+    public void AddScene(IScene scene, string name)
     {
         scene.LoadContent();
 
         scenes[name] = scene;
     }
 
-    public RemoveScene(string name)
+    public void RemoveScene(string name)
     {
         scenes[name] = null;
     }
