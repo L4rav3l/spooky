@@ -11,6 +11,9 @@ public class Market : IScene
     private ContentManager _contentManager;
     private SceneManager _sceneManager;
 
+    private Player _player;
+    private Camera2D _camera;
+
     private SpriteFont _pixelfont;
 
     public Market(GraphicsDevice graphicsDevice, ContentManager contentManager, SceneManager sceneManager)
@@ -32,6 +35,6 @@ public class Market : IScene
 
     public void Draw(SpriteBatch spriteBatch)
     {
-        
+
     }
 }
