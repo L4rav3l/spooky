@@ -62,7 +62,8 @@ public class Menu : IScene {
         {
             if(_selected == 0)
             {
-
+                _sceneManager.AddScene(new Market(_graphicsDevice, _contentManager, _sceneManager), "Market");
+                _sceneManager.ChangeScene("Market");
             } else {
                 GameData.Quit = true;
             }

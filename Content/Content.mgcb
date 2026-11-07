@@ -13,6 +13,9 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin market.tmx
+/copy:market.tmx
+
 #begin pixelfont.spritefont
 /importer:FontDescriptionImporter
 /processor:LocalizedFontProcessor
@@ -36,4 +39,10 @@
 /processorParam:TextureFormat=Color
 /processorParam:Version=3.8.6.1
 /build:player.png
+
+#begin tilemap.png
+/copy:tilemap.png
+
+#begin tilemap.tsx
+/copy:tilemap.tsx
 
