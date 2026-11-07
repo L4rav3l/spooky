@@ -22,10 +22,14 @@ public class Market : IScene
     private Camera2D _camera;
 
     private SpriteFont _pixelfont;
-    
+
+    private Texture2D _rectangle;
     private Texture2D _playerTexture;
 
+    private MouseState _previousMouseState;
+
     private float _pumpkinCountdown = 20000;
+    private int _selectedInventory = 1;
 
     private Dictionary<int, List<Rectangle>> _pumpinkEvents = new();
     private bool[] _pumpkinAvailable = new bool[8];
@@ -89,6 +93,9 @@ public class Market : IScene
     {
         _map = new TmxMap("Content/market.tmx");
 
+        _rectangle = new Texture2D(_graphicsDevice, 1, 1);
+        _rectangle.SetData(new[] { Color.White });
+
         _player = new Player(new Vector2(300, 300));
         _camera = new Camera2D(_graphicsDevice.Viewport);
 
@@ -132,6 +139,22 @@ public class Market : IScene
         }
 
         KeyboardState state = Keyboard.GetState();
+        MouseState mouseState = Mouse.GetState();
+
+        if(state.IsKeyDown(Keys.D1) && !GameData.oldState.IsKeyDown(Keys.D1))
+        {
+            _selectedInventory = 1;
+        }
+
+        if(state.IsKeyDown(Keys.D2) && !GameData.oldState.IsKeyDown(Keys.D2))
+        {
+            _selectedInventory = 2;
+        }
+
+        if(state.IsKeyDown(Keys.D3) && !GameData.oldState.IsKeyDown(Keys.D3))
+        {
+            _selectedInventory = 3;
+        }
 
         for(int i = 0; i < 8; i++)
         {
@@ -154,7 +177,31 @@ public class Market : IScene
             }
         }
 
+        int scrollDifference = mouseState.ScrollWheelValue - _previousMouseState.ScrollWheelValue;
+
+        if (scrollDifference > 0)
+        {
+            if(_selectedInventory == 3) {
+                _selectedInventory = 2;
+            } else if(_selectedInventory == 2) {
+                _selectedInventory = 1;
+            } else if(_selectedInventory == 1) {
+                _selectedInventory = 3;
+            }
+        }
+        else if (scrollDifference < 0)
+        {
+            if(_selectedInventory == 1) {
+                _selectedInventory = 2;
+            } else if(_selectedInventory == 2) {
+                _selectedInventory = 3;
+            } else if(_selectedInventory == 3) {
+                _selectedInventory = 1;
+            }
+        }
+
         GameData.oldState = state;
+        _previousMouseState = mouseState;
     }
 
     public void Draw(SpriteBatch spriteBatch)
@@ -190,11 +237,28 @@ public class Market : IScene
             }
         }
 
-        /* foreach(var layer in _map.Layers)
+        int w = 100;
+        int h = 100;
+
+        if(_selectedInventory == 1)
         {
-            if(layer.Name )
-            _mapManager.DrawLayer(layer, spriteBatch, LayerDeep, _camera);
-            LayerDeep += 0.01f;
-        } */
+            spriteBatch.Draw(_rectangle, new Rectangle((width / 2) - 250, (height / 10) * 8, w, h), Color.White * 0.4f);
+        } else {
+            spriteBatch.Draw(_rectangle, new Rectangle((width / 2) - 250, (height / 10) * 8, w, h), Color.Gray * 0.3f);
+        }
+
+        if(_selectedInventory == 2)
+        {
+            spriteBatch.Draw(_rectangle, new Rectangle((width / 2) - 50, (height / 10) * 8, w, h), Color.White * 0.4f);
+        } else {
+            spriteBatch.Draw(_rectangle, new Rectangle((width / 2) - 50, (height / 10) * 8, w, h), Color.Gray * 0.3f);
+        }
+
+        if(_selectedInventory == 3)
+        {
+            spriteBatch.Draw(_rectangle, new Rectangle((width / 2) + 150, (height / 10) * 8, w, h), Color.White * 0.4f);
+        } else {
+            spriteBatch.Draw(_rectangle, new Rectangle((width / 2) + 150, (height / 10) * 8, w, h), Color.Gray * 0.3f);
+        }
     }
 }
