@@ -35,6 +35,10 @@ public class Market : IScene
     private int _pumpkinStore = 1;
     private int _candleStore = 1;
 
+    private List<Rectangle> _candleShelf;
+    private List<Rectangle> _pumpkinShelf;
+    private List<Rectangle> _solidTiles;
+
     private Dictionary<int, List<Rectangle>> _pumpinkEvents = new();
     private Dictionary<int, int> _inventory = new();
     private bool[] _pumpkinAvailable = new bool[8];
@@ -121,6 +125,10 @@ public class Market : IScene
             dict[ts.FirstGid] = _contentManager.Load<Texture2D>(asset);
         }
 
+        _solidTiles = LoadObject("Content/market.tmx", "SolidTiles");
+        _pumpkinShelf = LoadObject("Content/market.tmx", "pumpkinZone");
+        _candleShelf = LoadObject("Content/market.tmx", "candleZone");
+
         for(int i = 0; i < 8; i++)
         {
             _pumpinkEvents[i] = LoadObject("Content/market.tmx", $"clickable{i+1}zone");
@@ -166,6 +174,48 @@ public class Market : IScene
         if(state.IsKeyDown(Keys.D3) && !GameData.oldState.IsKeyDown(Keys.D3))
         {
             _selectedInventory = 3;
+        }
+
+        foreach(Rectangle pumpkin in _pumpkinShelf)
+        {
+            if(_player.Hitbox.Intersects(pumpkin))
+            {
+                if(state.IsKeyDown(Keys.E) && GameData.oldState.IsKeyUp(Keys.E))
+                {
+                    if(_inventory[_selectedInventory] == 1 && _pumpkinStore < 3)
+                    {
+                        _inventory[_selectedInventory] = 0;
+                        _pumpkinStore++;
+                        break;
+                    } else if(_inventory[_selectedInventory] == 0 && _pumpkinStore > 0)
+                    {
+                        _inventory[_selectedInventory] = 1;
+                        _pumpkinStore--;
+                        break;
+                    }
+                }
+            }
+        }
+
+        foreach(Rectangle candle in _candleShelf)
+        {
+            if(_player.Hitbox.Intersects(candle))
+            {
+                if(state.IsKeyDown(Keys.E) && GameData.oldState.IsKeyUp(Keys.E))
+                {
+                    if(_inventory[_selectedInventory] == 2 && _candleStore < 3)
+                    {
+                        _inventory[_selectedInventory] = 0;
+                        _candleStore++;
+                        break;
+                    } else if(_inventory[_selectedInventory] == 0 && _candleStore > 0)
+                    {
+                        _inventory[_selectedInventory] = 2;
+                        _candleStore--;;
+                        break;
+                    }
+                }
+            }
         }
 
         for(int i = 0; i < 8; i++)
