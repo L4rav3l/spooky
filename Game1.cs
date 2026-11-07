@@ -6,15 +6,21 @@ namespace spooky;
 
 public class Game1 : Game
 {
-    private GraphicsDeviceManager _graphics;
+    private GraphicsDeviceManager _graphicsDevice;
     private SpriteBatch _spriteBatch;
     private SceneManager _sceneManager;
 
     public Game1()
     {
-        _graphics = new GraphicsDeviceManager(this);
+        _graphicsDevice = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+
+        _graphicsDevice.PreferredBackBufferWidth = 1920;
+        _graphicsDevice.PreferredBackBufferHeight = 1080;
+
+        _graphicsDevice.IsFullScreen = true;
+        _graphicsDevice.ApplyChanges();
     }
 
     protected override void Initialize()
