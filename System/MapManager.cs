@@ -22,7 +22,7 @@ public class MapManager
         {
             for(int x = 0; x < _map.Width; y++)
             {
-                var tile = layer.Tiles(y * _map.Width + x);
+                var tile = layer.Tiles[y * _map.Width + x];
 
                 if(tile.Gid == 0)
                 {
@@ -45,8 +45,8 @@ public class MapManager
 
                 int localId = tile.Gid - firstGid;
 
-                int tileWidth = _map.tileWidth;
-                int tileHeight = _map.tileHeight;
+                int tileWidth = _map.TileWidth;
+                int tileHeight = _map.TileHeight;
 
                 int tilesetColumns = ((int)tileset.Image.Width) / tileWidth;
 
@@ -56,7 +56,7 @@ public class MapManager
                 var sourceRectangle = new Rectangle(srcX, srcY, tileWidth, tileHeight);
                 Vector2 dest = _camera.WorldToScreen(new Vector2(x * tileWidth, y * tileHeight));
             
-                spriteBatch.Draw(texture, dest, sourceRectangle, Color.White, 0f, Vector2.Zero, 1f, SrpiteEffects.None, LayerDeep);
+                spriteBatch.Draw(texture, dest, sourceRectangle, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, LayerDeep);
             }
         }
     }

@@ -6,5 +6,6 @@ namespace spooky;
 public class GameData
 {
     public static bool Quit;
+    public static bool Move = true;
     public static KeyboardState oldState;
 }

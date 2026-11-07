@@ -55,13 +55,13 @@ public class Player
                 float dx = (hitbox.Center.X < solid.Center.X) ? solid.Left - hitbox.Right : solid.Right - hitbox.Left;
             
                 float dy = (hitbox.Center.Y < solid.Center.Y) ? solid.Top - hitbox.Bottom : solid.Bottom - hitbox.Top;
-            }
-
-            if(Math.Abs(dx) < Math.Abs(dy))
-            {
-                Position.X += dx;
-            } else {
-                Position.Y += dy;
+            
+                if(Math.Abs(dx) < Math.Abs(dy))
+                {
+                    Position.X += dx;
+                } else {
+                    Position.Y += dy;
+                }
             }
         }
 
@@ -73,6 +73,6 @@ public class Player
     {
         screenPos = camera.WorldToScreen(Position - new Vector2(Width / 2, Height / 2));
 
-        spriteBatch.Draw(texture, screenPos, null, Color.White, 0f, Vector2.Zero, 1.5f, SrpiteEffects.None, 0.2f);
+        spriteBatch.Draw(texture, screenPos, null, Color.White, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0.2f);
     }
 }
