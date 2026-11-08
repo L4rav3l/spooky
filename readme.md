@@ -7,7 +7,7 @@ In this game, you manage your own market. You talk with customers, carve pumpkin
 C# Monogame
 
 ## Demo Video
-Coming soon..
+https://youtu.be/iGCG8TX4jWc
 
 ## Build Command
 
