@@ -5,6 +5,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
+
 using TiledSharp;
 
 namespace spooky;
@@ -27,6 +30,10 @@ public class Market : IScene
     private Texture2D _playerTexture;
     private Texture2D _pumpkin;
     private Texture2D _candle;
+
+    private SoundEffect _moneySFX;
+    private SoundEffect _gameover;
+    private Song _song;
 
     private MouseState _previousMouseState;
 
@@ -65,7 +72,7 @@ public class Market : IScene
     private bool _carvingCandle;
     private const int _CarveGrid = 32;
     private bool [,] _carveCells;
-    private int _Cooldown = 300;
+    private float _CountDown = 3000;
     
     private Point _hoverCell = new Point(-1, -1);
 
@@ -244,6 +251,14 @@ public class Market : IScene
         _mapManager = new MapManager(_map, dict);
     
         _playerTexture = _contentManager.Load<Texture2D>("player");
+
+        _moneySFX = _contentManager.Load<SoundEffect>("money");
+        _gameover = _contentManager.Load<SoundEffect>("gameover");
+        _song = _contentManager.Load<Song>("music");
+
+        MediaPlayer.Play(_song);
+
+        MediaPlayer.IsRepeating = true;
     }
 
     public void Update(GameTime gameTime)
@@ -255,6 +270,15 @@ public class Market : IScene
         MouseState mouseState = Mouse.GetState();
 
         float elapsed = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+
+        _CountDown -= elapsed;
+
+        if(_CountDown <= 0)
+        {
+            MediaPlayer.Stop();
+            _gameover.Play();
+            _sceneManager.ChangeScene("Summary");
+        }
 
         if(_nomoney)
         {
@@ -284,7 +308,9 @@ public class Market : IScene
 
                 if(_carvingCandle)
                 {
-                    _money += random.Next(250);
+                    int temp_money = random.Next(250);
+                    _money += temp_money;
+                    GameData.fullearnings += temp_money;
 
                     if(_inventory[1] == 2)
                     {
@@ -298,11 +324,16 @@ public class Market : IScene
                     }
                 } else 
                 {
-                    _money += random.Next(150);
+                    int temp_money = random.Next(150);
+                    _money += temp_money;
+                    GameData.fullearnings += temp_money;
                 }
 
                 _carving = false;
+                _moneySFX.Play();
                 GameData.Move = true;
+                GameData.fullSell++;
+                RandomCustomer();
             }
         }
 
@@ -664,6 +695,15 @@ public class Market : IScene
 
         int w = 100;
         int h = 100;
+
+        int totalSeconds = (int)(_CountDown / 1000);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+
+        Vector2 TimerM = _pixelfont.MeasureString($"{minutes}:{seconds}");
+        Vector2 Timer = new Vector2(width / 2 - TimerM.X / 2, 50 - TimerM.Y / 2);
+
+        spriteBatch.DrawString(_pixelfont, $"{minutes}:{seconds}", Timer, Color.White);
 
         if(_selectedInventory == 1)
         {

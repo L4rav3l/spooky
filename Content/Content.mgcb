@@ -26,8 +26,29 @@
 /processorParam:Version=3.8.6.1
 /build:candle.png
 
+#begin gameover.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/processorParam:Version=3.8.6.1
+/build:gameover.wav
+
 #begin market.tmx
 /copy:market.tmx
+
+#begin money.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/processorParam:Version=3.8.6.1
+/build:money.wav
+
+#begin music.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/processorParam:Quality=Best
+/processorParam:Version=3.8.6.1
+/build:music.ogg
 
 #begin pixelfont.spritefont
 /importer:FontDescriptionImporter
