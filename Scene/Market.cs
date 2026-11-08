@@ -35,6 +35,7 @@ public class Market : IScene
     private int _pumpkinStore = 1;
     private int _candleStore = 1;
     private int _money = 0;
+    private float _indicatorCountdown = 3000;
 
     private List<Rectangle> _candleShelf;
     private List<Rectangle> _pumpkinShelf;
@@ -52,6 +53,10 @@ public class Market : IScene
     private bool _candleShelfEnter;
     private bool _candleShop;
     private bool _candleShopMenu;
+    private bool _nomoney;
+    private bool _nostock;
+
+    private string _indicator;
 
     public Market(GraphicsDevice graphicsDevice, ContentManager contentManager, SceneManager sceneManager)
     {
@@ -162,6 +167,26 @@ public class Market : IScene
         _camera.Follow(_player.Position, new Vector2(_map.Width * 64, _map.Height * 64));
 
         float elapsed = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+
+        if(_nomoney)
+        {
+            _indicator = "There are insufficient money.";
+        } else if(_nostock) {
+            _indicator = "There is not enough space.";
+        }
+
+        if(_indicator != "")
+        {
+            _indicatorCountdown -= elapsed;
+
+            if(_indicatorCountdown <= 0)
+            {
+                _nomoney = false;
+                _nostock = false;
+                _indicator = "";
+                _indicatorCountdown = 5000;
+            }
+        }
 
         _pumpkinCountdown -= elapsed;
 
@@ -299,10 +324,10 @@ public class Market : IScene
                         _money-=50;
                         _inventory[3] = 2;
                     } else {    
-
+                        _nostock = true;
                     }
                 } else {
-
+                    _nomoney = true;
                 }
             }
         }
@@ -349,6 +374,14 @@ public class Market : IScene
         int height = _graphicsDevice.Viewport.Height;
 
         _graphicsDevice.Clear(Color.Black);
+
+        if (!string.IsNullOrEmpty(_indicator) && _pixelfont != null)
+        {
+            Vector2 indicatorSize = _pixelfont.MeasureString(_indicator);
+            Vector2 indicatorPosition = new Vector2(width / 2 - (indicatorSize.X / 2), (height / 4) - indicatorSize.Y / 2);
+
+            spriteBatch.DrawString(_pixelfont, _indicator, indicatorPosition, Color.White);
+        }
 
         _player.Draw(spriteBatch, _playerTexture, _camera);
 
