@@ -36,16 +36,21 @@ public class Market : IScene
     private int _candleStore = 1;
     private int _money = 0;
     private float _indicatorCountdown = 3000;
+    private int _customerNumber = 0;
+    private int _pumpkinNumber = 0;
+    private int _pumpkinSkinNumber = 0;
 
     private List<Rectangle> _candleShelf;
     private List<Rectangle> _pumpkinShelf;
     private List<Rectangle> _solidTiles;
     private List<Rectangle> _candleTiles;
     private List<Rectangle> _candleMarket;
+    private List<Rectangle> _managment;
     private Rectangle _buyButton;
     private Rectangle _backButton;
 
     private Dictionary<int, List<Rectangle>> _pumpinkEvents = new();
+    private Dictionary<int, Texture2D> _pumpkinSkin = new();
     private Dictionary<int, int> _inventory = new();
     private bool[] _pumpkinAvailable = new bool[8];
     private bool[] _pumpkinEnter = new bool[8];
@@ -55,7 +60,19 @@ public class Market : IScene
     private bool _candleShopMenu;
     private bool _nomoney;
     private bool _nostock;
+    private bool _inManagment;
+    private bool _carving;
+    private bool _carvingCandle;
+    private const int _CarveGrid = 32;
+    private bool [,] _carveCells;
+    private int _Cooldown = 300;
+    
+    private Point _hoverCell = new Point(-1, -1);
 
+    private Rectangle _carveArea;
+    private Rectangle _sellButton;
+
+    private int _carvedCount;
     private string _indicator;
 
     public Market(GraphicsDevice graphicsDevice, ContentManager contentManager, SceneManager sceneManager)
@@ -112,12 +129,74 @@ public class Market : IScene
         _pumpkinAvailable[unavailablePumpkin[index]] = true;
     }
 
+    public void RandomCustomer()
+    {
+        Random random = new Random();
+
+        int index = random.Next(6);
+        _customerNumber = index+1;
+    }
+
+    public void RandomPumpkinSkin()
+    {
+        Random random = new Random();
+
+        int index = random.Next(10);
+        _pumpkinSkinNumber = index+1;
+    }
+
+    private void UpdateCarving(KeyboardState state, MouseState mouseState)
+    {
+        int cell = _carveArea.Width / _CarveGrid;
+
+        _hoverCell = new Point(-1, -1);
+
+        if(_carveArea.Contains(mouseState.Position))
+        {
+            int cx = (mouseState.Position.X - _carveArea.X) / cell;
+            int cy = (mouseState.Position.Y - _carveArea.Y) / cell;
+            _hoverCell = new Point(
+                Math.Clamp(cx, 0, _CarveGrid - 1),
+                Math.Clamp(cy, 0, _CarveGrid - 1)
+            );
+
+            if(_hoverCell.X >= 0 && mouseState.LeftButton == ButtonState.Pressed)
+            {
+                for(int dy = -1; dy <= 1; dy++)
+                {
+                    for(int dx = -1; dx <= 1; dx++)
+                    {
+                        int x = _hoverCell.X + dx;
+                        int y = _hoverCell.Y + dy;
+                        if(x < 0 || y < 0 || x >= _CarveGrid || y >= _CarveGrid)
+                        {
+                            continue;
+                        }
+
+                        if(dx*dx + dy*dy > 0.75f*0.75f)
+                        {
+                            continue;
+                        }
+
+                        _carveCells[x,y] = true;
+                    }
+                }
+            }
+        }
+    }
+
     public void LoadContent()
     {
         _map = new TmxMap("Content/market.tmx");
 
         _buyButton = new Rectangle(_graphicsDevice.Viewport.Width / 2 - 50, _graphicsDevice.Viewport.Height / 2 + 175, 100, 50);
         _backButton = new Rectangle(_graphicsDevice.Viewport.Width / 2 + 225, _graphicsDevice.Viewport.Height / 2 - 220, 40, 40);
+        _sellButton = new Rectangle(_graphicsDevice.Viewport.Width / 2 - 75, _graphicsDevice.Viewport.Height / 2 - 50 + 300, 200, 100);
+
+        RandomCustomer();
+
+        _carveCells = new bool[_CarveGrid, _CarveGrid];
+        _carveArea = new Rectangle(230, 170, 640, 640);
 
         _inventory[1] = 0;
         _inventory[2] = 0;
@@ -146,10 +225,16 @@ public class Market : IScene
         _pumpkinShelf = LoadObject("Content/market.tmx", "pumpkinZone");
         _candleShelf = LoadObject("Content/market.tmx", "candleZone");
         _candleMarket = LoadObject("Content/market.tmx", "candlestore");
+        _managment = LoadObject("Content/market.tmx", "managment");
 
         for(int i = 0; i < 8; i++)
         {
             _pumpinkEvents[i] = LoadObject("Content/market.tmx", $"clickable{i+1}zone");
+        }
+
+        for(int i = 1; i < 11; i++)
+        {
+            _pumpkinSkin[i] = _contentManager.Load<Texture2D>($"pumpkin{i}"); 
         }
 
         RandomPumpkinAvailable();
@@ -165,6 +250,9 @@ public class Market : IScene
     {
         _player.Update(gameTime, _solidTiles, _camera);
         _camera.Follow(_player.Position, new Vector2(_map.Width * 64, _map.Height * 64));
+
+        KeyboardState state = Keyboard.GetState();
+        MouseState mouseState = Mouse.GetState();
 
         float elapsed = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
 
@@ -188,6 +276,44 @@ public class Market : IScene
             }
         }
 
+        if(_sellButton.Contains(mouseState.Position) && _carving)
+        {
+            if(mouseState.LeftButton == ButtonState.Pressed  && _previousMouseState.LeftButton != ButtonState.Pressed)
+            {
+                Random random = new Random();
+
+                if(_carvingCandle)
+                {
+                    _money += random.Next(250);
+
+                    if(_inventory[1] == 2)
+                    {
+                        _inventory[1] = 0;
+                    } else if(_inventory[2] == 2)
+                    {
+                        _inventory[2] = 0;
+                    } else if(_inventory[3] == 2)
+                    {
+                        _inventory[3] = 0;
+                    }
+                } else 
+                {
+                    _money += random.Next(150);
+                }
+
+                _carving = false;
+                GameData.Move = true;
+            }
+        }
+
+        if(_carving)
+        {
+            UpdateCarving(state, mouseState);
+            GameData.oldState = state;
+            _previousMouseState = mouseState;
+            return;
+        }
+
         _pumpkinCountdown -= elapsed;
 
         if(_pumpkinCountdown <= 0)
@@ -195,9 +321,6 @@ public class Market : IScene
             _pumpkinCountdown = 20000;
             RandomPumpkinAvailable();
         }
-
-        KeyboardState state = Keyboard.GetState();
-        MouseState mouseState = Mouse.GetState();
 
         if(state.IsKeyDown(Keys.D1) && !GameData.oldState.IsKeyDown(Keys.D1))
         {
@@ -252,6 +375,44 @@ public class Market : IScene
                     GameData.Move = false;
                     _candleShopMenu = true;
                 }
+            }
+        }
+
+        foreach(Rectangle managment in _managment)
+        {
+            _inManagment = false;
+            if(_player.Hitbox.Intersects(managment))
+            {
+                _inManagment = true;
+            }
+        }
+
+        if(_inManagment && state.IsKeyDown(Keys.E) && !GameData.oldState.IsKeyDown(Keys.E))
+        {
+            if(_inventory[1] == 1 || _inventory[2] == 1 || _inventory[3] == 1)
+            {
+                if(_inventory[1] == 1)
+                {
+                    _inventory[1] = 0;
+                } else if(_inventory[2] == 1)
+                {
+                    _inventory[2] = 0;
+                } else if(_inventory[3] == 1)
+                {
+                    _inventory[3] = 0;
+                }
+
+                if(_inventory[1] == 2 || _inventory[2] == 2 || _inventory[3] == 2)
+                {
+                    _carvingCandle = true;
+                } else {
+                    _carvingCandle = false;
+                }
+
+                RandomPumpkinSkin();
+                _carving = true;
+                GameData.Move = false;
+                Array.Clear(_carveCells, 0, _carveCells.Length);
             }
         }
 
@@ -383,6 +544,14 @@ public class Market : IScene
             spriteBatch.DrawString(_pixelfont, _indicator, indicatorPosition, Color.White);
         }
 
+        if(_inManagment && !_carving)
+        {
+            Vector2 ManagmentTextM = _pixelfont.MeasureString("Press [E] to fulfill customers.");
+            Vector2 managmentText = new Vector2((width / 2) - (ManagmentTextM.X / 2), ((height / 10) * 7) - ManagmentTextM.Y / 2);
+
+            spriteBatch.DrawString(_pixelfont, "Press [E] to fulfill customers.", managmentText, Color.White);
+        }
+
         _player.Draw(spriteBatch, _playerTexture, _camera);
 
         float LayerDeep = 0.01f;
@@ -392,6 +561,36 @@ public class Market : IScene
 
         _mapManager.DrawLayer(_map.Layers[$"pumpkin{_pumpkinStore}"], spriteBatch, LayerDeep+0.01f, _camera);
         _mapManager.DrawLayer(_map.Layers[$"candle{_candleStore}"], spriteBatch, LayerDeep+0.01f, _camera);
+
+        _mapManager.DrawLayer(_map.Layers[$"customer{_customerNumber}"], spriteBatch, LayerDeep+0.01f, _camera);
+
+        if(_carving)
+        {
+            spriteBatch.Draw(_rectangle, new Rectangle(width / 2 - 850, height / 2 - 400, 1700, 800), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.91f);
+
+            spriteBatch.Draw(_pumpkin, new Vector2(width / 2 - 700, height / 2 - 400), null, Color.White, 0f, Vector2.Zero, 10f, SpriteEffects.None, 0.92f);
+
+            spriteBatch.Draw(_pumpkinSkin[_pumpkinSkinNumber], new Vector2(width / 2 + 100, height / 2 - 400), null, Color.White, 0f, Vector2.Zero, 10f, SpriteEffects.None, 0.92f);
+
+            spriteBatch.Draw(_rectangle, _sellButton, null, Color.Gray, 0f, Vector2.Zero, SpriteEffects.None, 0.93f);
+
+            spriteBatch.DrawString(_pixelfont, "SELL", new Vector2(width / 2 - 50, height / 2 - 50 + 310), Color.Black, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0.94f);
+
+            int cell = _carveArea.Width / _CarveGrid;
+            
+            for(int y = 0; y < _CarveGrid; y++)
+            {
+                for(int x = 0; x < _CarveGrid; x++)
+                {
+                    if(_carveCells[x, y])
+                    {
+                        var r = new Rectangle(_carveArea.X + x*cell, _carveArea.Y + y*cell, cell, cell);
+
+                        spriteBatch.Draw(_rectangle, r, null, Color.Black, 0f, Vector2.Zero, SpriteEffects.None, 0.93f);
+                    }
+                }
+            }
+        }
 
         for(int i = 0; i < 8; i++)
         {
