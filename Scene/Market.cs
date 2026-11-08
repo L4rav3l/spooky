@@ -72,7 +72,7 @@ public class Market : IScene
     private bool _carvingCandle;
     private const int _CarveGrid = 32;
     private bool [,] _carveCells;
-    private float _CountDown = 3000;
+    private float _CountDown = 300000;
     
     private Point _hoverCell = new Point(-1, -1);
 
