@@ -56,7 +56,7 @@ public class MapManager
                 var sourceRectangle = new Rectangle(srcX, srcY, tileWidth, tileHeight);
                 Vector2 dest = _camera.WorldToScreen(new Vector2(x * tileWidth, y * tileHeight));
             
-                spriteBatch.Draw(texture, dest, sourceRectangle, Color.White * 0.1f, 0f, Vector2.Zero, 1f, SpriteEffects.None, LayerDeep);
+                spriteBatch.Draw(texture, dest, sourceRectangle, Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, LayerDeep);
             }
         }
     }

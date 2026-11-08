@@ -34,15 +34,24 @@ public class Market : IScene
     private int _selectedInventory = 1;
     private int _pumpkinStore = 1;
     private int _candleStore = 1;
+    private int _money = 0;
 
     private List<Rectangle> _candleShelf;
     private List<Rectangle> _pumpkinShelf;
     private List<Rectangle> _solidTiles;
+    private List<Rectangle> _candleTiles;
+    private List<Rectangle> _candleMarket;
+    private Rectangle _buyButton;
+    private Rectangle _backButton;
 
     private Dictionary<int, List<Rectangle>> _pumpinkEvents = new();
     private Dictionary<int, int> _inventory = new();
     private bool[] _pumpkinAvailable = new bool[8];
     private bool[] _pumpkinEnter = new bool[8];
+    private bool _pumpkinShelfEnter;
+    private bool _candleShelfEnter;
+    private bool _candleShop;
+    private bool _candleShopMenu;
 
     public Market(GraphicsDevice graphicsDevice, ContentManager contentManager, SceneManager sceneManager)
     {
@@ -102,6 +111,9 @@ public class Market : IScene
     {
         _map = new TmxMap("Content/market.tmx");
 
+        _buyButton = new Rectangle(_graphicsDevice.Viewport.Width / 2 - 50, _graphicsDevice.Viewport.Height / 2 + 175, 100, 50);
+        _backButton = new Rectangle(_graphicsDevice.Viewport.Width / 2 + 225, _graphicsDevice.Viewport.Height / 2 - 220, 40, 40);
+
         _inventory[1] = 0;
         _inventory[2] = 0;
         _inventory[3] = 0;
@@ -128,6 +140,7 @@ public class Market : IScene
         _solidTiles = LoadObject("Content/market.tmx", "SolidTiles");
         _pumpkinShelf = LoadObject("Content/market.tmx", "pumpkinZone");
         _candleShelf = LoadObject("Content/market.tmx", "candleZone");
+        _candleMarket = LoadObject("Content/market.tmx", "candlestore");
 
         for(int i = 0; i < 8; i++)
         {
@@ -145,7 +158,7 @@ public class Market : IScene
 
     public void Update(GameTime gameTime)
     {
-        _player.Update(gameTime, new List<Rectangle>(), _camera);
+        _player.Update(gameTime, _solidTiles, _camera);
         _camera.Follow(_player.Position, new Vector2(_map.Width * 64, _map.Height * 64));
 
         float elapsed = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -178,8 +191,12 @@ public class Market : IScene
 
         foreach(Rectangle pumpkin in _pumpkinShelf)
         {
+            _pumpkinShelfEnter = false;
+
             if(_player.Hitbox.Intersects(pumpkin))
             {
+                _pumpkinShelfEnter = true;
+
                 if(state.IsKeyDown(Keys.E) && GameData.oldState.IsKeyUp(Keys.E))
                 {
                     if(_inventory[_selectedInventory] == 1 && _pumpkinStore < 3)
@@ -197,10 +214,30 @@ public class Market : IScene
             }
         }
 
-        foreach(Rectangle candle in _candleShelf)
+        foreach(Rectangle candle in _candleMarket)
         {
+            _candleShop = false;
+
             if(_player.Hitbox.Intersects(candle))
             {
+                _candleShop = true;
+
+                if(state.IsKeyDown(Keys.E) && !GameData.oldState.IsKeyDown(Keys.E))
+                {
+                    GameData.Move = false;
+                    _candleShopMenu = true;
+                }
+            }
+        }
+
+        foreach(Rectangle candle in _candleShelf)
+        {
+            _candleShelfEnter = false;
+
+            if(_player.Hitbox.Intersects(candle))
+            {
+                _candleShelfEnter = true;
+
                 if(state.IsKeyDown(Keys.E) && GameData.oldState.IsKeyUp(Keys.E))
                 {
                     if(_inventory[_selectedInventory] == 2 && _candleStore < 3)
@@ -240,6 +277,42 @@ public class Market : IScene
                     _inventory[_selectedInventory] = 1;
                     _pumpkinAvailable[i] = false;
                 }
+            }
+        }
+
+        if(_buyButton.Contains(mouseState.Position) && _candleShop)
+        {
+            if(mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton != ButtonState.Pressed)
+            {
+                if(_money >= 50)
+                {
+                    if(_inventory[1] == 0)
+                    {
+                        _money-=50;
+                        _inventory[1] = 2;
+                    } else if(_inventory[2] == 0)
+                    {
+                        _money-=50;
+                        _inventory[2] = 2;
+                    } else if(_inventory[3] == 0)
+                    {
+                        _money-=50;
+                        _inventory[3] = 2;
+                    } else {    
+
+                    }
+                } else {
+
+                }
+            }
+        }
+
+        if(_backButton.Contains(mouseState.Position) && _candleShop)
+        {
+            if(mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton != ButtonState.Pressed)
+            {
+                _candleShopMenu = false;
+                GameData.Move = true;
             }
         }
 
@@ -304,6 +377,57 @@ public class Market : IScene
 
                 spriteBatch.DrawString(_pixelfont, "Press [E] to pick up the pumpkin.", pumpkinText, Color.White);
             }
+        }
+
+        Vector2 MoneyM = _pixelfont.MeasureString($"$ {_money}");
+        Vector2 Money = new Vector2(25, 25);
+
+        spriteBatch.DrawString(_pixelfont, $"$ {_money}", Money, Color.White);
+
+        Vector2 CandleM = _pixelfont.MeasureString("Press [E] to interact with candle storage.");
+        Vector2 Candle = new Vector2((width / 2) - (CandleM.X / 2), ((height / 10) * 7) - CandleM.Y / 2);
+
+        if(_candleShelfEnter)
+        {
+            spriteBatch.DrawString(_pixelfont, "Press [E] to interact with candle storage.", Candle, Color.White);
+        }
+
+        Vector2 PumpkinM = _pixelfont.MeasureString("Press [E] to interact with pumpkin storage.");
+        Vector2 Pumpkin = new Vector2((width / 2) - (CandleM.X / 2), ((height / 10) * 7) - CandleM.Y / 2);
+
+        if(_pumpkinShelfEnter)
+        {
+            spriteBatch.DrawString(_pixelfont, "Press [E] to interact with pumpkin storage.", Pumpkin, Color.White);
+        }
+
+        Vector2 ShopM = _pixelfont.MeasureString("Press [E] to open illegal market.");
+        Vector2 Shop = new Vector2((width / 2) - (ShopM.X / 2), ((height / 10) * 7) - ShopM.Y / 2);
+
+        if(_candleShop && !_candleShopMenu)
+        {
+            spriteBatch.DrawString(_pixelfont, "Press [E] to open illegal market.", Shop, Color.White);
+        }
+
+        if(_candleShopMenu)
+        {
+            spriteBatch.Draw(_rectangle, new Rectangle(width / 2 - 300, height / 2 - 250, 600, 500), null, Color.Brown, 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+            
+            Vector2 BuyCandleM = _pixelfont.MeasureString("BUY CANDLE");
+            Vector2 BuyCandle = new Vector2((width / 2) - (BuyCandleM.X / 2), (height / 4) - (BuyCandleM.Y / 2) + 50);
+
+            spriteBatch.DrawString(_pixelfont, "BUY CANDLE", BuyCandle, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.91f);
+
+            spriteBatch.Draw(_candle, new Vector2(width / 2 - 160, height / 2 - 200), null, Color.White, 0f, Vector2.Zero, 5f, SpriteEffects.None, 0.91f);
+
+            spriteBatch.Draw(_rectangle, new Rectangle(width / 2 - 50, height / 2 + 175, 100, 50), null, Color.Gray * 0.2f, 0f, Vector2.Zero, SpriteEffects.None, 0.91f);
+
+            Vector2 BuyM = _pixelfont.MeasureString("$50");
+            Vector2 Buy = new Vector2(width / 2 - (BuyM.X / 2), (height / 2) + 200 - (BuyM.Y / 2));
+
+            spriteBatch.DrawString(_pixelfont, "$50", Buy, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.92f);
+
+            spriteBatch.Draw(_rectangle, new Rectangle(width / 2 + 225, height / 2 - 220, 40, 40), null, Color.Gray * 0.2f, 0f, Vector2.Zero, SpriteEffects.None, 0.91f);
+            spriteBatch.DrawString(_pixelfont, "X", new Vector2(width / 2 + 235, height / 2 - 220), Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.92f);
         }
 
         int w = 100;
